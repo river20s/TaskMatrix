@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>할일 목록</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .task-list {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .task-list a {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #000;
+            text-decoration: none;
+            color: #000;
+            background-color: #f0f0f0;
+        }
+        .menu-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>할일 목록</h1>
+    </header>
+    <div class="task-list">
+        {% for task_list in task_lists %}
+            <a href="{% url 'task_list' task_list.pk %}">{{ task_list.name }}</a>
+        {% endfor %}
+        <a href="{% url 'task_list_create' %}">새 목록 추가</a>
+    </div>
+    <div class="menu-button" onclick="toggleMenu()">menu</div>
+    <div class="hidden-menu" id="hidden-menu">
+        <p>숨겨진 메뉴</p>
+        <!-- 기타 메뉴 내용 -->
+    </div>
+    <script>
+        function toggleMenu() {
+            var menu = document.getElementById('hidden-menu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

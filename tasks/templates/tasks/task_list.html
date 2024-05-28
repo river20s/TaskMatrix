@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>작업 목록</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            width: 80%;
+            height: 500px;
+            margin-top: 50px;
+        }
+        .quadrant {
+            border: 2px solid #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 10px;
+        }
+        .quadrant:nth-child(1) { background-color: #ffffcc; } /* 중요하고 긴급함 */
+        .quadrant:nth-child(2) { background-color: #ccffcc; } /* 중요하지만 긴급하지 않음 */
+        .quadrant:nth-child(3) { background-color: #ffcccc; } /* 긴급하지만 중요하지 않음 */
+        .quadrant:nth-child(4) { background-color: #cccccc; } /* 중요하지도 긴급하지 않음 */
+        .quadrant small {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .task {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #000;
+            background-color: #fff;
+            cursor: move;
+        }
+        .input-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .input-container input {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        .input-container button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .hidden-menu {
+            display: none;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            border: 1px solid #000;
+            padding: 10px;
+            background-color: #fff;
+        }
+        .menu-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>작업 목록</h1>
+    </header>
+    <div class="matrix">
+        <div class="quadrant" id="quadrant-1" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <small>중요하고 긴급함</small>
+            {% for task in tasks %}
+                {% if task.category == 1 %}
+                    <div class="task" id="task-{{ task.id }}" draggable="true" ondragstart="drag(event)">{{ task.title }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="quadrant" id="quadrant-2" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <small>중요하지만 긴급하지 않음</small>
+            {% for task in tasks %}
+                {% if task.category == 2 %}
+                    <div class="task" id="task-{{ task.id }}" draggable="true" ondragstart="drag(event)">{{ task.title }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="quadrant" id="quadrant-3" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <small>긴급하지만 중요하지 않음</small>
+            {% for task in tasks %}
+                {% if task.category == 3 %}
+                    <div class="task" id="task-{{ task.id }}" draggable="true" ondragstart="drag(event)">{{ task.title }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="quadrant" id="quadrant-4" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <small>중요하지도 긴급하지 않음</small>
+            {% for task in tasks %}
+                {% if task.category == 4 %}
+                    <div class="task" id="task-{{ task.id }}" draggable="true" ondragstart="drag(event)">{{ task.title }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="input-container">
+        <input type="text" id="task-input" placeholder="할일 입력">
+        <button onclick="addTask()">send</button>
+    </div>
+    <div class="menu-button" onclick="toggleMenu()">menu</div>
+    <div class="hidden-menu" id="hidden-menu">
+        <p>숨겨진 메뉴</p>
+        <!-- 기타 메뉴 내용 -->
+    </div>
+    <script>
+        function toggleMenu() {
+            var menu = document.getElementById('hidden-menu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function addTask() {
+            var input = document.getElementById('task-input').value;
+            if (input.trim() === "") return;
+            
+            var task = document.createElement('div');
+            task.className = 'task';
+            task.draggable = true;
+            task.textContent = input;
+            task.id = `task-${new Date().getTime()}`;
+            task.ondragstart = drag;
+            document.getElementById('quadrant-4').appendChild(task);
+            document.getElementById('task-input').value = '';
+
+            // 여기서 서버로 새로운 할일을 추가하는 AJAX 요청을 보낼 수 있습니다.
+            // AJAX 요청 예시:
+            /*
+            fetch('/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')  // CSRF 토큰 설정 필요
+                },
+                body: JSON.stringify({ title: input, category: 4 })
+            }).then(response => response.json())
+              .then(data => console.log(data));
+            */
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drag(event) {
+            event.dataTransfer.setData('text', event.target.id);
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            var data = event.dataTransfer.getData('text');
+            var task = document.getElementById(data);
+            event.target.appendChild(task);
+
+            // 할일이 어느 사분면으로 이동했는지 확인
+            var taskId = task.id.split('-')[1];
+            var quadrantId = event.target.id.split('-')[1];
+            var category = parseInt(quadrantId);
+
+            // 서버로 업데이트 요청
+            fetch(`/update/${taskId}/${category}/`)
+                .then(response => response.json())
+                .then(data => console.log(data));
+        }
+
+        var tasks = document.getElementsByClassName('task');
+        for (var i = 0; i < tasks.length; i++) {
+            tasks[i].ondragstart = drag;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
